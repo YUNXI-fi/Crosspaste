@@ -1,0 +1,32 @@
+#!/bin/sh
+# 卸载清理后执行（幂等）：清运行痕迹（pid/socket）；用户数据按卸载向导
+# wizard_purge_data 的选择决定是否删除，默认保留。
+set -u
+
+APP=crosspaste
+APPDEST="${TRIM_APPDEST:-/var/apps/crosspaste/target}"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/crosspaste/var}"
+
+PIDFILE="$PKGVAR/crosspaste.pid"
+
+# 兜底停掉残留进程（正常卸载前系统已 stop，此处防漏网）
+if [ -s "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+  kill "$(cat "$PIDFILE")" 2>/dev/null
+  i=0
+  while [ $i -lt 30 ]; do
+    kill -0 "$(cat "$PIDFILE")" 2>/dev/null || break
+    i=$((i+1)); sleep 0.5
+  done
+  kill -0 "$(cat "$PIDFILE")" 2>/dev/null && kill -9 "$(cat "$PIDFILE")" 2>/dev/null
+fi
+
+rm -f "$PIDFILE"
+
+# 卸载向导：勾选"删除应用数据"时清空数据目录，默认保留
+if [ "${wizard_purge_data:-false}" = "true" ]; then
+  rm -rf "$PKGVAR"
+  echo "$APP: purged user data at $PKGVAR"
+else
+  echo "$APP: uninstalled; user data in $PKGVAR left untouched"
+fi
+exit 0

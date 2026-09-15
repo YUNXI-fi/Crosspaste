@@ -1,0 +1,91 @@
+#!/bin/sh
+# 跨贴 Crosspaste · 生命周期脚本（start/stop/status）
+# 约定：status 运行返回 0，未运行返回 3；未知参数返回 1；失败返回 1。
+
+set -u
+
+APP=crosspaste
+APPDEST="${TRIM_APPDEST:-/var/apps/crosspaste/target}"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/crosspaste/var}"
+PKGETC="${TRIM_PKGETC:-/var/apps/crosspaste/etc}"
+PKGTMP="${TRIM_PKGTMP:-/var/apps/crosspaste/tmp}"
+SERVICE_PORT="${TRIM_SERVICE_PORT:-28531}"
+
+PIDFILE="$PKGVAR/crosspaste.pid"
+BINDIR="$APPDEST/server/bin"
+
+log() { echo "$APP: $*"; }
+fail() { echo "$APP: $*" >&2; [ -n "${TRIM_TEMP_LOGFILE:-}" ] && echo "$*" >>"$TRIM_TEMP_LOGFILE"; exit 1; }
+
+is_running() { [ -s "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
+
+# 选出当前架构对应的二进制（amd64 / arm64）
+pick_bin() {
+  arch="${TRIM_SYS_ARCH:-}"
+  if [ -z "$arch" ]; then
+    arch="$(uname -m)"
+  fi
+  case "$arch" in
+    x86_64|amd64|x86-64) BIN="$BINDIR/crosspaste_linux_amd64" ;;
+    aarch64|arm64|armv8l) BIN="$BINDIR/crosspaste_linux_arm64" ;;
+    *) BIN="$BINDIR/crosspaste_linux_amd64" ;;   # 兜底
+  esac
+}
+
+do_start() {
+  is_running && { log "already running (pid $(cat "$PIDFILE"))"; return 0; }
+  pick_bin
+  [ -x "$BIN" ] || fail "binary not found: $BIN"
+
+  # 目录就绪
+  mkdir -p "$PKGVAR/media" "$PKGTMP" "$PKGETC"
+
+  # 直接运行：fnOS 以包专属非特权用户执行脚本，无需再降权（runuser 仅限 root，非 root 下会报错）
+  # 兼容旧版本向导的自定义存储目录（新版向导已移除该字段，平台仍持久化旧变量）；留空则用应用数据目录
+  STORAGE_ROOT="${wizard_storage_root:-$PKGVAR/media}"
+  mkdir -p "$STORAGE_ROOT" 2>/dev/null || true
+  UI_DIR="$APPDEST/ui"
+  env \
+    STORAGE_ROOT="$STORAGE_ROOT" \
+    APP_DB_PATH="$PKGVAR/crosspaste.db" \
+    UI_DIR="$UI_DIR" \
+    TRIM_API_TOKEN="${TRIM_API_TOKEN:-}" \
+    TRIM_SERVICE_PORT="$SERVICE_PORT" \
+    GATEWAY_SOCKET="$APPDEST/app.sock" \
+    "$BIN" >>"$PKGVAR/app.log" 2>&1 &
+  echo $! > "$PIDFILE"
+
+  # 等待 HTTP 就绪
+  i=0
+  while [ $i -lt 30 ]; do
+    curl -s -o /dev/null "http://127.0.0.1:$SERVICE_PORT/api/auth/me" && break
+    i=$((i+1)); sleep 0.5
+  done
+  is_running || fail "server failed to start; see $PKGVAR/app.log"
+  log "started (pid $(cat "$PIDFILE"))"
+  return 0
+}
+
+do_stop() {
+  if is_running; then
+    kill "$(cat "$PIDFILE")" 2>/dev/null
+    i=0
+    while [ $i -lt 30 ]; do
+      is_running || break
+      i=$((i+1)); sleep 0.5
+    done
+    is_running && kill -9 "$(cat "$PIDFILE")" 2>/dev/null
+    rm -f "$PIDFILE"
+  fi
+  rm -f "$PIDFILE" "$APPDEST/app.sock"
+  log "stopped"
+  return 0
+}
+
+case "${1:-}" in
+  start)   do_start ;;
+  stop)    do_stop ;;
+  status)  is_running && { log "running"; exit 0; } ; log "not running"; exit 3 ;;
+  *)       fail "usage: $0 {start|stop|status}" ;;
+esac
+exit 0

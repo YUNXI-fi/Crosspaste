@@ -1,0 +1,19 @@
+#!/bin/sh
+# 升级应用文件前执行（幂等）：停掉旧进程，清理 pid，准备升级。
+set -u
+APPDEST="${TRIM_APPDEST:-/var/apps/crosspaste/target}"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/crosspaste/var}"
+
+PIDFILE="$PKGVAR/crosspaste.pid"
+
+if [ -s "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then
+  kill "$(cat "$PIDFILE")" 2>/dev/null
+  i=0
+  while [ $i -lt 30 ]; do
+    kill -0 "$(cat "$PIDFILE")" 2>/dev/null || break
+    i=$((i+1)); sleep 0.5
+  done
+  kill -0 "$(cat "$PIDFILE")" 2>/dev/null && kill -9 "$(cat "$PIDFILE")" 2>/dev/null
+fi
+rm -f "$PIDFILE"
+exit 0

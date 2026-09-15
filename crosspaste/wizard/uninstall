@@ -1,0 +1,12 @@
+[
+  {
+    "stepTitle": "数据清理",
+    "items": [
+      {
+        "type": "switch",
+        "field": "wizard_purge_data",
+        "label": "同时删除应用数据（数据库与媒体文件）"
+      }
+    ]
+  }
+]

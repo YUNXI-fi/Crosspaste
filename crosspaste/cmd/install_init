@@ -1,0 +1,9 @@
+#!/bin/sh
+# 安装文件应用前执行（幂等）：只准备运行目录，不写业务数据。
+# 脚本以包专属非特权用户运行，mkdir 出的目录天然归属该用户，无需 chown。
+set -u
+PKGVAR="${TRIM_PKGVAR:-/var/apps/crosspaste/var}"
+PKGTMP="${TRIM_PKGTMP:-/var/apps/crosspaste/tmp}"
+
+mkdir -p "$PKGVAR/media" "$PKGTMP"
+exit 0

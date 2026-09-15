@@ -1,0 +1,14 @@
+{
+  ".url": {
+    "crosspaste.main": {
+      "title": "跨贴",
+      "icon": "images/icon_{0}.png",
+      "type": "iframe",
+      "protocol": "",
+      "gatewayPrefix": "/app/crosspaste",
+      "gatewaySocket": "app.sock",
+      "url": "/app/crosspaste",
+      "allUsers": true
+    }
+  }
+}
