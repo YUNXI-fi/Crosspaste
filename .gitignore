@@ -1,0 +1,20 @@
+# 本仓库只发布 fnOS 应用包（crosspaste/）与更新日志 CHANGELOG.md。
+# 采用白名单：先忽略根目录下的一切，再单独放行需要发布的内容；
+# 前后端源码、图标资源库、文档、安装包等一律不纳入版本管理。
+/*
+!/.gitignore
+!/CHANGELOG.md
+!/crosspaste/
+
+# 包内构建产物不入库：交叉编译的二进制与前端产物
+# （只保留桌面入口定义 config 与说明文档）
+crosspaste/app/server/bin/
+crosspaste/app/ui/*
+!crosspaste/app/ui/config
+!crosspaste/app/ui/README.md
+
+# 包目录内若生成安装包也不入库（根目录的 fpk 已被上面的 /* 忽略）
+crosspaste/*.fpk
+
+# 本地测试数据
+/tmp/cp-test/

@@ -1,0 +1,35 @@
+#!/bin/sh
+# 配置变更应用后执行（幂等）：将向导收集的设置页访问密码写入数据库；
+# 端口由平台经 TRIM_SERVICE_PORT 注入，下一次 cmd/main start 时自然生效。
+set -u
+APP=crosspaste
+APPDEST="${TRIM_APPDEST:-/var/apps/crosspaste/target}"
+PKGVAR="${TRIM_PKGVAR:-/var/apps/crosspaste/var}"
+BINDIR="$APPDEST/server/bin"
+
+log() { echo "$APP: $*"; }
+fail() { echo "$APP: $*" >&2; [ -n "${TRIM_TEMP_LOGFILE:-}" ] && echo "$*" >>"$TRIM_TEMP_LOGFILE"; exit 1; }
+
+# 留空表示不修改密码，直接跳过（不会关闭已设置的密码）
+[ -n "${wizard_settings_password:-}" ] || exit 0
+
+# 按架构挑选二进制
+arch="${TRIM_SYS_ARCH:-$(uname -m)}"
+case "$arch" in
+  x86_64|amd64|x86-64) BIN="$BINDIR/crosspaste_linux_amd64" ;;
+  aarch64|arm64|armv8l) BIN="$BINDIR/crosspaste_linux_arm64" ;;
+  *) BIN="$BINDIR/crosspaste_linux_amd64" ;;
+esac
+
+[ -x "$BIN" ] || fail "binary not found: $BIN"
+
+# 密码只经环境变量传入，不写入日志或命令行参数
+if ! env \
+  APP_DB_PATH="$PKGVAR/crosspaste.db" \
+  SETTINGS_PASSWORD="$wizard_settings_password" \
+  "$BIN" --set-settings-password >>"$PKGVAR/app.log" 2>&1; then
+  fail "apply settings password failed, see $PKGVAR/app.log"
+fi
+
+log "settings password applied"
+exit 0
