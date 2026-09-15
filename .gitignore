@@ -1,8 +1,9 @@
-# 本仓库只发布 fnOS 应用包（crosspaste/）与更新日志 CHANGELOG.md。
+# 本仓库只发布 fnOS 应用包（crosspaste/）、项目说明 README.md 与更新日志 CHANGELOG.md。
 # 采用白名单：先忽略根目录下的一切，再单独放行需要发布的内容；
 # 前后端源码、图标资源库、文档、安装包等一律不纳入版本管理。
 /*
 !/.gitignore
+!/README.md
 !/CHANGELOG.md
 !/crosspaste/
 
