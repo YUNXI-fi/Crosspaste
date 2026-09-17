@@ -10,8 +10,12 @@
 
 - **统一收纳**：文本、图片、视频、音频、文件五类内容集中存放，上传即入库
 - **文本自动识别**：按内容判定类型（URL、JSON、代码、Markdown 等），卡片以对应形式展示
+- **Markdown 渲染**：识别为 Markdown 的内容可直接预览，支持表格、任务列表与 Mermaid 图表
+  （时序图、流程图、状态图等，跟随深浅主题重绘）；通篇一张图的条目可全屏打开，拖动平移、
+  滚轮或双指缩放查看，图片在列表与详情页都能点开大图缩放
 - **文件类型图标**：内置 147 种扩展名图标，随主题着色；未收录的类型回退到语义图标
-- **分组与访问密码**：分组可设置独立密码，解锁后才能查看组内条目
+- **分组与访问密码**：分组可设置独立密码，解锁后才能查看组内条目；侧栏与「切换分组」下拉里
+  用锁图标区分已解锁 / 未解锁。解锁凭证保存在服务端，重启或升级应用后不必重新解锁
 - **标签与收藏**：一条内容可挂多个标签；收藏用于标记常用内容，便于筛选
 - **全文检索**：基于 SQLite FTS5，覆盖正文、摘要、标题与标签
 - **对外分享**：生成只读分享链接，有效期可选 1 / 12 / 24 小时或 7 天，支持续期与撤销；提供
@@ -23,10 +27,13 @@
 本仓库发布的是 fnOS 应用包骨架，安装方式与常规飞牛应用一致：
 
 ```bash
-fnpack build -d crosspaste          # 打包生成 crosspaste.fpk
-appcenter-cli install-fpk crosspaste.fpk
+./package.sh                                 # 打包，生成 crosspaste_v<版本号>.fpk
+appcenter-cli install-fpk crosspaste_v0.1.5.fpk
 appcenter-cli start crosspaste
 ```
+
+产物名取自 `crosspaste/manifest` 的 `version`（如上面的 `crosspaste_v0.1.5.fpk`），
+据此可确认装的是哪一版。
 
 也可以在飞牛应用中心直接上传 fpk 安装。安装向导中可设置：
 
@@ -58,11 +65,14 @@ appcenter-cli start crosspaste
 - `crosspaste/cmd/` — 生命周期脚本（安装 / 配置 / 升级 / 卸载回调，以及启停入口 `main`）
 - `crosspaste/config/` — 运行权限与资源声明
 - `crosspaste/wizard/` — 安装与配置向导表单
-- `crosspaste/app/ui/config` — 桌面入口定义
+- `crosspaste/app/ui/` — 桌面入口定义与前端产物（每次发版随构建更新）
+- `crosspaste/app/server/bin/` — amd64 / arm64 静态二进制（每次发版随构建更新）
 - `crosspaste/ICON.PNG`、`crosspaste/ICON_256.PNG` — 应用图标（64 / 256 像素）
+- `package.sh` — 打包脚本：产物名自动带 `manifest` 的版本号
 - `CHANGELOG.md` — 版本变更记录
 
-前端产物（`app/ui` 下的资源）与后端二进制（`app/server/bin/`）由构建流程生成，不入库。
+前端产物（`app/ui` 下的资源）与后端二进制（`app/server/bin/`）由构建流程生成，并随每次发版
+一并提交；仓库里的 `crosspaste/` 因此可以直接打包出完整应用，不必先自备构建环境。
 
 从源码构建的流程：
 
@@ -74,8 +84,8 @@ cd web && ./build.sh
 cd backend && ./build.sh build
 cp crosspaste_linux_amd64 crosspaste_linux_arm64 ../crosspaste/app/server/bin/
 
-# 3) 打包
-fnpack build -d crosspaste
+# 3) 打包（产物名自动带版本号）
+./package.sh
 ```
 
 ## 版本
