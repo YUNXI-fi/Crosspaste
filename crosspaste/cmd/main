@@ -17,7 +17,26 @@ BINDIR="$APPDEST/server/bin"
 log() { echo "$APP: $*"; }
 fail() { echo "$APP: $*" >&2; [ -n "${TRIM_TEMP_LOGFILE:-}" ] && echo "$*" >>"$TRIM_TEMP_LOGFILE"; exit 1; }
 
-is_running() { [ -s "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; }
+# pid_is_ours 判断 pid 是否真的是本应用的二进制：异常掉电或被 SIGKILL 后遗留的 pid
+# 可能已被系统复用给别的进程，此时只看 kill -0 会把"别人的进程"当成自己——
+# 结果是启动时误报"已在运行"，或升级/卸载时 kill 掉无关进程。
+# 比对 /proc/<pid>/cmdline 的首项（可执行文件路径），不依赖特定工具的可用性。
+pid_is_ours() {
+  [ -r "/proc/$1/cmdline" ] || return 1
+  first=$(tr '\0' '\n' < "/proc/$1/cmdline" 2>/dev/null | head -n 1)
+  case "$first" in
+    "$BINDIR"/crosspaste_linux_amd64|"$BINDIR"/crosspaste_linux_arm64) return 0 ;;
+  esac
+  return 1
+}
+
+is_running() {
+  [ -s "$PIDFILE" ] || return 1
+  pid=$(cat "$PIDFILE" 2>/dev/null)
+  [ -n "$pid" ] || return 1
+  kill -0 "$pid" 2>/dev/null || return 1
+  pid_is_ours "$pid"
+}
 
 # 选出当前架构对应的二进制（amd64 / arm64）
 pick_bin() {

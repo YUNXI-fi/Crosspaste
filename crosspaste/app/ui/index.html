@@ -4,10 +4,27 @@
     <meta charset="utf-8" />
     <!-- viewport-fit=cover 才能让 env(safe-area-inset-*) 生效（刘海屏/手势条适配） -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- 告知浏览器本站两套配色，原生控件/滚动条才不会在暗色下按浅色渲染 -->
+    <meta name="color-scheme" content="dark light" />
     <title>跨贴 Crosspaste</title>
     <link rel="icon" href="/icon.ico" />
-    <script type="module" crossorigin src="/assets/index-DoG7w7o9.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BIlz1h_L.css">
+    <!-- 主题引导：data-theme 必须在样式生效前定下来。App.tsx 里的写入发生在首帧之后，
+         暗色用户每次加载都会先看到一次浅色白闪。规则与 App.tsx 的初始值一致：
+         只有显式选过 light 才是浅色，未设置时按默认深色。 -->
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem('cp-theme') !== 'light') {
+            document.documentElement.dataset.theme = 'dark'
+          }
+        } catch (e) {
+          /* localStorage 不可用（隐私模式等）：按默认深色走 */
+          document.documentElement.dataset.theme = 'dark'
+        }
+      })()
+    </script>
+    <script type="module" crossorigin src="/assets/index-BasgflEy.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B6rx1_Bt.css">
   </head>
   <body>
     <div id="root"></div>
