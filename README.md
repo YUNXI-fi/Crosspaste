@@ -28,11 +28,11 @@
 
 ```bash
 ./package.sh                                 # 打包，生成 crosspaste_v<版本号>.fpk
-appcenter-cli install-fpk crosspaste_v0.1.5.fpk
+appcenter-cli install-fpk crosspaste_v0.1.6.fpk
 appcenter-cli start crosspaste
 ```
 
-产物名取自 `crosspaste/manifest` 的 `version`（如上面的 `crosspaste_v0.1.5.fpk`），
+产物名取自 `crosspaste/manifest` 的 `version`（如上面的 `crosspaste_v0.1.6.fpk`），
 据此可确认装的是哪一版。
 
 也可以在飞牛应用中心直接上传 fpk 安装。安装向导中可设置：
