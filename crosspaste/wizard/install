@@ -19,6 +19,15 @@
         "rules": [
           { "pattern": "^$|^.{4,64}$", "message": "密码至少 4 位，最长 64 位" }
         ]
+      },
+      {
+        "type": "text",
+        "field": "wizard_external_url",
+        "label": "外部访问地址（选填，分享链接前缀；可不写 http:// 或 https://，留空则用访客当前地址）",
+        "initValue": "",
+        "rules": [
+          { "pattern": "^$|^(https?://)?\\S+$", "message": "请填写域名或地址，如 nas.example.com:28531；不写协议头时会按访客的访问方式自动补上" }
+        ]
       }
     ]
   }

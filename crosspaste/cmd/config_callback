@@ -1,5 +1,5 @@
 #!/bin/sh
-# 配置变更应用后执行（幂等）：将向导收集的设置页访问密码写入数据库；
+# 配置变更应用后执行（幂等）：把向导收集的设置页访问密码与外部访问地址写入数据库；
 # 端口由平台经 TRIM_SERVICE_PORT 注入，下一次 cmd/main start 时自然生效。
 set -u
 APP=crosspaste
@@ -10,8 +10,11 @@ BINDIR="$APPDEST/server/bin"
 log() { echo "$APP: $*"; }
 fail() { echo "$APP: $*" >&2; [ -n "${TRIM_TEMP_LOGFILE:-}" ] && echo "$*" >>"$TRIM_TEMP_LOGFILE"; exit 1; }
 
-# 留空表示不修改密码，直接跳过（不会关闭已设置的密码）
-[ -n "${wizard_settings_password:-}" ] || exit 0
+# 两个字段都是"留空表示不修改"（既不会关闭已设置的密码，也不会清掉已填的地址）：
+# 都为空就没什么可做的，直接退出
+if [ -z "${wizard_settings_password:-}" ] && [ -z "${wizard_external_url:-}" ]; then
+  exit 0
+fi
 
 # 按架构挑选二进制
 arch="${TRIM_SYS_ARCH:-$(uname -m)}"
@@ -24,12 +27,25 @@ esac
 [ -x "$BIN" ] || fail "binary not found: $BIN"
 
 # 密码只经环境变量传入，不写入日志或命令行参数
-if ! env \
-  APP_DB_PATH="$PKGVAR/crosspaste.db" \
-  SETTINGS_PASSWORD="$wizard_settings_password" \
-  "$BIN" --set-settings-password >>"$PKGVAR/app.log" 2>&1; then
-  fail "apply settings password failed, see $PKGVAR/app.log"
+if [ -n "${wizard_settings_password:-}" ]; then
+  if ! env \
+    APP_DB_PATH="$PKGVAR/crosspaste.db" \
+    SETTINGS_PASSWORD="$wizard_settings_password" \
+    "$BIN" --set-settings-password >>"$PKGVAR/app.log" 2>&1; then
+    fail "apply settings password failed, see $PKGVAR/app.log"
+  fi
+  log "settings password applied"
 fi
 
-log "settings password applied"
+# 外部访问地址（分享链接前缀）：同样只经环境变量传入
+if [ -n "${wizard_external_url:-}" ]; then
+  if ! env \
+    APP_DB_PATH="$PKGVAR/crosspaste.db" \
+    EXTERNAL_URL="$wizard_external_url" \
+    "$BIN" --set-external-url >>"$PKGVAR/app.log" 2>&1; then
+    fail "apply external url failed, see $PKGVAR/app.log"
+  fi
+  log "external url applied"
+fi
+
 exit 0

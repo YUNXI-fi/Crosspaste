@@ -37,5 +37,16 @@ if [ -n "${wizard_settings_password:-}" ]; then
   log "settings password applied"
 fi
 
+# 向导收集的外部访问地址（选填）：只影响分享链接的前缀，留空不写库
+if [ -n "${wizard_external_url:-}" ]; then
+  if ! env \
+    APP_DB_PATH="$PKGVAR/crosspaste.db" \
+    EXTERNAL_URL="$wizard_external_url" \
+    "$BIN" --set-external-url >>"$PKGVAR/app.log" 2>&1; then
+    fail "apply external url failed, see $PKGVAR/app.log"
+  fi
+  log "external url applied"
+fi
+
 log "install migration ok"
 exit 0
