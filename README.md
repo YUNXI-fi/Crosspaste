@@ -8,8 +8,11 @@
 
 ## 功能
 
-- **统一收纳**：文本、图片、视频、音频、文件五类内容集中存放，上传即入库
-- **文本自动识别**：按内容判定类型（URL、JSON、代码、Markdown 等），卡片以对应形式展示
+- **统一收纳**：文本、图片、视频、音频、文件五类内容集中存放，上传即入库；新增内容统一进收件箱
+- **剪贴板自动记录**：页面在前台时自动把新复制的文本、图片与文件收进收件箱，重复内容跳过；需
+  HTTPS 或 localhost，未授权时可在页面内一键重新授权
+- **文本自动识别**：按内容判定类型（URL、JSON、代码、Markdown、完整 SVG 等），卡片以对应形式
+  展示；完整 SVG 归入「图片」分类并直接画出图形
 - **Markdown 渲染**：识别为 Markdown 的内容可直接预览，支持表格、任务列表与 Mermaid 图表
   （时序图、流程图、状态图等，跟随深浅主题重绘）；通篇一张图的条目可全屏打开，拖动平移、
   滚轮或双指缩放查看，图片在列表与详情页都能点开大图缩放
@@ -28,11 +31,11 @@
 
 ```bash
 ./package.sh                                 # 打包，生成 crosspaste_v<版本号>.fpk
-appcenter-cli install-fpk crosspaste_v0.1.7.fpk
+appcenter-cli install-fpk crosspaste_v0.1.8.fpk
 appcenter-cli start crosspaste
 ```
 
-产物名取自 `crosspaste/manifest` 的 `version`（如上面的 `crosspaste_v0.1.7.fpk`），
+产物名取自 `crosspaste/manifest` 的 `version`（如上面的 `crosspaste_v0.1.8.fpk`），
 据此可确认装的是哪一版。
 
 也可以在飞牛应用中心直接上传 fpk 安装。安装向导中可设置：

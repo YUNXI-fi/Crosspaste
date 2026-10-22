@@ -8,6 +8,31 @@
     <meta name="color-scheme" content="dark light" />
     <title>跨贴 Crosspaste</title>
     <link rel="icon" href="/icon.ico" />
+    <!-- 首屏兜底：入口 JS 被浏览器扩展（广告拦截/隐私防护）或安全软件拦下时，
+         页面会永远停在"一片背景"——访客既不知道发生了什么，也无从自救。
+         这段内容随 #root 一起被 React 挂载时替换掉，所以正常加载下用户看不到它；
+         样式必须写在这里（内联），不能依赖 index.css 的产物：那种情形下被拦的
+         往往就是资源，偏偏只有 HTML 自身一定解析得到。
+         延迟 8s 才淡入：正常冷启动（NAS 慢）不该闪出这句"没能加载"。 -->
+    <style>
+      #boot-fallback {
+        position: fixed; inset: 0; display: grid; place-items: center; padding: 24px;
+        opacity: 0; animation: boot-fallback-in .25s ease 8s forwards;
+      }
+      #boot-fallback .boot-card {
+        max-width: 420px; padding: 20px 22px; text-align: left;
+        background: #f8fafc; color: #475569;
+        border: 1px solid #e2e8f0; border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(2, 6, 23, .18);
+        font: 14px/1.7 system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+      }
+      #boot-fallback h1 { margin: 0 0 8px; font-size: 16px; color: #1e293b; }
+      #boot-fallback p { margin: 0; }
+      #boot-fallback p + p { margin-top: 6px; }
+      #boot-fallback .tip { margin-top: 10px; font-size: 12.5px; color: #94a3b8; }
+      #boot-fallback a { color: #0f766e; font-weight: 600; }
+      @keyframes boot-fallback-in { to { opacity: 1 } }
+    </style>
     <!-- 主题引导：data-theme 必须在样式生效前定下来。App.tsx 里的写入发生在首帧之后，
          暗色用户每次加载都会先看到一次浅色白闪。规则与 App.tsx 的初始值一致：
          只有显式选过 light 才是浅色，未设置时按默认深色。 -->
@@ -23,10 +48,20 @@
         }
       })()
     </script>
-    <script type="module" crossorigin src="/assets/index-C58j1svD.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BGvXd_HC.css">
+    <script type="module" crossorigin src="/assets/index-CUjl_Pr9.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DFaCaleg.css">
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- 被 React 挂载时整体替换；只有入口 JS 没跑起来时访客才会看到（见上方说明） -->
+      <div id="boot-fallback">
+        <div class="boot-card">
+          <h1>页面没能加载出来</h1>
+          <p>可能是浏览器扩展（广告拦截 / 隐私防护类）或安全软件拦下了页面资源。</p>
+          <p>请关闭针对本站的拦截规则，然后<a href="">刷新重试</a>。</p>
+          <p class="tip">网络较慢时也可能稍晚就绪，可先等待片刻。</p>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
